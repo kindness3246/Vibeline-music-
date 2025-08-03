@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VibeLine Player</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: Arial, sans-serif;
+      color: white;
+      padding-bottom: 80px;
+    }
+
+    .player-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .album-art {
+      width: 250px;
+      height: 250px;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 20px 0;
+      box-shadow: 0 0 20px #00acee;
+    }
+
+    .album-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .song-info {
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .song-info h2 {
+      margin: 5px 0;
+      font-size: 20px;
+      color: #00acee;
+    }
+
+    .song-info p {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .progress-control-wrapper {
+      width: 100%;
+      padding: 0 20px;
+      margin-top: 20px;
+    }
+
+    #progressBar {
+      width: 100%;
+      accent-color: #00acee;
+    }
+
+    .time-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #ccc;
+      margin-top: 5px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      gap: 20px;
+    }
+
+    .controls button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      color: #00acee;
+    }
+
+    .icon {
+      width: 30px;
+      height: 30px;
+      fill: white;
+    }
+
+    .icon:hover {
+      fill: #00acee;
+    }
+
+    #heartIcon {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    audio {
+      display: none;
+    }
+
+    .comments-section {
+      width: 90%;
+      max-width: 600px;
+      margin: 30px auto;
+    }
+
+    .comments-section h3 {
+      font-size: 18px;
+      color: #00acee;
+      margin-bottom: 10px;
+    }
+
+    .comment-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 30px;
+      border-radius: 5px;
+      border: none;
+      padding: 8px;
+      resize: none;
+      font-size: 13px;
+    }
+
+    .comment-box button {
+      align-self: flex-end;
+      padding: 6px 12px;
+      background-color: #00acee;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      color: white;
+    }
+
+    .comment {
+      background-color: #111;
+      border: 1px solid #222;
+      padding: 6px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .reply-button {
+      background: none;
+      border: none;
+      color: #00acee;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .reply {
+      background-color: #222;
+      border: 1px solid #333;
+      padding: 4px 8px;
+      margin-top: 6px;
+      margin-left: 10px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .reply-input {
+      margin-top: 6px;
+      margin-left: 10px;
+      display: flex;
+      gap: 5px;
+    }
+
+    .reply-input textarea {
+      height: 25px;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .reply-input button {
+      font-size: 12px;
+      padding: 3px 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player-container">
+    <div class="album-art">
+      <img src="https://i.imgur.com/zl0VOYk.jpeg" alt="Album Art" />
+    </div>
+
+    <div class="song-info">
+      <p id="artist">Artist Name</p>
+      <h2 id="title">Song Title</h2>
+    </div>
+
+    <div class="progress-control-wrapper">
+      <input type="range" id="progressBar" value="0" min="0" max="100" step="1" />
+      <div class="time-info">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button onclick="prevTrack()">⏮</button>
+
+      <button id="playPauseBtn" onclick="togglePlay()">
+        <svg id="playIcon" class="icon" viewBox="0 0 24 24">
+          <polygon points="5,3 19,12 5,21" />
+        </svg>
+        <svg id="pauseIcon" class="icon" viewBox="0 0 24 24" style="display: none;">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+      </button>
+
+      <button onclick="nextTrack()">⏭</button>
+
+      <svg id="heartIcon" width="30" height="30" viewBox="0 0 24 24" fill="none"
+        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        onclick="toggleLike()">
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+      </svg>
+    </div>
+
+    <audio id="audio-player"></audio>
+  </div>
+
+  <div class="comments-section">
+    <h3>Comments</h3>
+    <div class="comment-box">
+      <textarea id="commentInput" placeholder="Write a comment..."></textarea>
+      <button onclick="addComment()">Post</button>
+    </div>
+    <div id="commentsList"></div>
+  </div>
+
+  <script>
+    const audio = document.getElementById("audio-player");
+    const playIcon = document.getElementById("playIcon");
+    const pauseIcon = document.getElementById("pauseIcon");
+    const heartIcon = document.getElementById("heartIcon");
+    const progressBar = document.getElementById("progressBar");
+    const currentTimeLabel = document.getElementById("currentTime");
+    const durationLabel = document.getElementById("duration");
+    const title = document.getElementById("title");
+    const artist = document.getElementById("artist");
+
+    let isPlaying = false;
+    let currentTrackIndex = 0;
+
+    const playlist = [
+      { title: "Song One", artist: "Artist A", file: "song1.mp3", liked: false },
+      { title: "Song Two", artist: "Artist B", file: "song2.mp3", liked: false },
+      { title: "Song Three", artist: "Artist C", file: "song3.mp3", liked: false },
+    ];
+
+    function loadTrack(index) {
+      const track = playlist[index];
+      audio.src = track.file;
+      title.textContent = track.title;
+      artist.textContent = track.artist;
+      updateLikeIcon();
+      audio.load();
+      if (isPlaying) audio.play();
+    }
+
+    function updateLikeIcon() {
+      const liked = playlist[currentTrackIndex].liked;
+      heartIcon.setAttribute("fill", liked ? "red" : "none");
+      heartIcon.setAttribute("stroke", liked ? "red" : "white");
+    }
+
+    function toggleLike() {
+      const track = playlist[currentTrackIndex];
+      track.liked = !track.liked;
+      updateLikeIcon();
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        audio.pause();
+        playIcon.style.display = "block";
+        pauseIcon.style.display = "none";
+      } else {
+        audio.play();
+        playIcon.style.display = "none";
+        pauseIcon.style.display = "block";
+      }
+    }
+
+    audio.onplay = () => isPlaying = true;
+    audio.onpause = () => isPlaying = false;
+
+    function prevTrack() {
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentTrackIndex);
+    }
+
+    function nextTrack() {
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      loadTrack(currentTrackIndex);
+    }
+
+    function formatTime(time) {
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60);
+      return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    }
+
+    audio.addEventListener("loadedmetadata", () => {
+      durationLabel.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener("timeupdate", () => {
+      if (!isNaN(audio.duration)) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressBar.value = percent;
+        currentTimeLabel.textContent = formatTime(audio.currentTime);
+        durationLabel.textContent = formatTime(audio.duration);
+      }
+    });
+
+    progressBar.addEventListener("input", () => {
+      if (!isNaN(audio.duration)) {
+        audio.currentTime = (progressBar.value / 100) * audio.duration;
+      }
+    });
+
+    function addComment() {
+      const input = document.getElementById("commentInput");
+      const text = input.value.trim();
+      if (text !== "") {
+        const commentList = document.getElementById("commentsList");
+        const comment = document.createElement("div");
+        comment.className = "comment";
+        comment.innerHTML = `
+          ${text}
+          <button class="reply-button" onclick="showReplyBox(this)">Reply</button>
+          <div class="replies"></div>
+        `;
+        commentList.prepend(comment);
+        input.value = "";
+      }
+    }
+
+    function showReplyBox(button) {
+      const parent = button.parentNode;
+      if (parent.querySelector(".reply-input")) return;
+      const replyBox = document.createElement("div");
+      replyBox.className = "reply-input";
+      replyBox.innerHTML = `
+        <textarea placeholder="Reply..."></textarea>
+        <button onclick="postReply(this)">Send</button>
+      `;
+      parent.appendChild(replyBox);
+    }
+
+    function postReply(button) {
+      const replyBox = button.parentNode;
+      const text = replyBox.querySelector("textarea").value.trim();
+      if (text !== "") {
+        const repliesDiv = replyBox.parentNode.querySelector(".replies");
+        const reply = document.createElement("div");
+        reply.className = "reply";
+        reply.textContent = text;
+        repliesDiv.appendChild(reply);
+        replyBox.remove();
+      }
+    }
+
+    // Load initial track
+    loadTrack(currentTrackIndex);
+  </script>
+</body>
+</html>
