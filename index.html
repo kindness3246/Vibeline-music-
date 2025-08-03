@@ -1,0 +1,177 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VibeLine</title>
+  <style>
+    body {
+      background-color: #000;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }.logo {
+  font-size: 40px;
+  color: #00acee;
+  text-shadow: 0 0 10px #00acee;
+  margin-bottom: 30px;
+}
+
+.btn-group {
+  margin-bottom: 20px;
+}
+
+.btn {
+  background-color: #00acee;
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  margin: 0 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #008dcf;
+}
+
+.form-box {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+}
+
+input {
+  padding: 10px;
+  margin: 8px;
+  width: 250px;
+  border-radius: 5px;
+  border: none;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+
+.forgot-link {
+  margin-top: 5px;
+  color: #00acee;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+  </style>
+</head>
+<body>  <div class="logo">🎵 VibeLine</div>  <div class="btn-group">
+    <button class="btn" onclick="showForm('login')">Login</button>
+    <button class="btn" onclick="showForm('signup')">Sign Up</button>
+  </div>  <!-- Login Form -->  <div class="form-box" id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" />
+    <input type="password" id="loginPassword" placeholder="Password" />
+    <button class="btn" onclick="login()">Login</button>
+    <div class="forgot-link" onclick="resetPassword()">Forgot Password?</div>
+    <div id="loginError" class="error"></div>
+  </div>  <!-- Signup Form -->  <div class="form-box" id="signupForm">
+    <input type="email" id="signupEmail" placeholder="Email" />
+    <input type="text" id="signupUsername" placeholder="Username (e.g. user123)" />
+    <input type="password" id="signupPassword" placeholder="Password" />
+    <button class="btn" onclick="signup()">Sign Up</button>
+    <div id="signupError" class="error"></div>
+  </div>  <!-- Firebase -->  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0a74JDeblXZpiXve9M8QOHYFSlaNjL8w",
+      authDomain: "vibeline-977a0.firebaseapp.com",
+      projectId: "vibeline-977a0",
+      storageBucket: "vibeline-977a0.appspot.com",
+      messagingSenderId: "195244542966",
+      appId: "1:195244542966:web:9e4d42d8e7c8fc4599d5d7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.showForm = function(type) {
+      document.getElementById("loginForm").style.display = type === 'login' ? 'flex' : 'none';
+      document.getElementById("signupForm").style.display = type === 'signup' ? 'flex' : 'none';
+      document.getElementById("loginError").textContent = "";
+      document.getElementById("signupError").textContent = "";
+    };
+
+    window.login = async function () {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+      const errorDiv = document.getElementById("loginError");
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "music.html";
+      } catch (error) {
+        errorDiv.textContent = "Incorrect email or password.";
+      }
+    };
+
+    window.signup = async function () {
+      const email = document.getElementById("signupEmail").value;
+      const username = document.getElementById("signupUsername").value.trim();
+      const password = document.getElementById("signupPassword").value;
+      const errorDiv = document.getElementById("signupError");
+
+      if (!username.match(/^\w{3,}$/)) {
+        errorDiv.textContent = "Username must be at least 3 characters (letters/numbers only).";
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Save user to Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          username: username,
+          uid: user.uid
+        });
+
+        window.location.href = "music.html";
+      } catch (error) {
+        errorDiv.textContent = error.message;
+      }
+    };
+
+    window.resetPassword = async function () {
+      const email = document.getElementById("loginEmail").value;
+      if (!email) {
+        document.getElementById("loginError").textContent = "Enter your email first.";
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert("Password reset email sent.");
+      } catch (error) {
+        document.getElementById("loginError").textContent = "Failed to send reset email.";
+      }
+    };
+  </script></body>
+</html>
